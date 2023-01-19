@@ -1,4 +1,4 @@
-import { Component, createSignal, onMount } from "solid-js";
+import { Component, createSignal, For, JSX, onMount } from "solid-js";
 import rough from "roughjs";
 import type { RoughCanvas } from "roughjs/bin/canvas";
 import type { RoughGenerator } from "roughjs/bin/generator";
@@ -14,10 +14,9 @@ import {
 const [canvasData, setCanvasData] = createSignal<{
   roughCanvas: RoughCanvas;
   canvasContext: CanvasRenderingContext2D | null;
-  generator: RoughGenerator;
 }>();
 const [elements, setElements] = createSignal<Element[]>();
-const [selectedType, setSelectedType] = createSignal<SelectedType>("selction");
+const [selectedType, setSelectedType] = createSignal<SelectedType>("selection");
 
 interface CreateElementProps {
   type: Element["type"];
@@ -45,9 +44,8 @@ function createElement({
   if (type === "line") {
     return { type, id, x, y, x2: clientX, y2: clientY };
   }
-  if (type === "circle") {
-    const dia = Math.sqrt(diffX * 2 + diffY * 2);
-    return { type, x, y, id, diameter: dia };
+  if (type === "ellipse") {
+    return { type, x, y, id, width: diffX, height: diffY };
   }
 
   return undefined;
@@ -59,28 +57,30 @@ function drawElements() {
 
   if (!elementsData || !canvas) return;
 
-  if (canvas.canvasContext) {
-    // clear previous elements
-    canvas.canvasContext.clearRect(
-      0,
-      0,
-      canvas.canvasContext.canvas.width,
-      canvas.canvasContext.canvas.height
-    );
-  }
+  // clear previous elements
+  canvas.canvasContext?.clearRect(
+    0,
+    0,
+    canvas.canvasContext.canvas.width,
+    canvas.canvasContext.canvas.height
+  );
+
   elementsData.forEach((el) => {
-    let obj;
     if (el.type === "rectangle") {
-      obj = canvas.generator.rectangle(el.x, el.y, el.width, el.height);
+      canvas.roughCanvas.rectangle(el.x, el.y, el.width, el.height);
     }
     if (el.type === "line") {
-      obj = canvas.generator.line(el.x, el.y, el.x2, el.y2);
+      canvas.roughCanvas.line(el.x, el.y, el.x2, el.y2);
     }
-    if (el.type === "circle") {
-      obj = canvas.generator.circle(el.x, el.y, el.diameter);
+    if (el.type === "ellipse") {
+      // console.log(canvas.canvasContext?.moveTo())
+      canvas.roughCanvas.ellipse(
+        el.width / 2,
+        el.height / 2,
+        el.width,
+        el.height
+      );
     }
-
-    if (obj) canvas.roughCanvas.draw(obj);
   });
 }
 
@@ -92,13 +92,12 @@ const Canvas: Component = () => {
 
   onMount(() => {
     if (!canvasRef) return;
-    const roughCanvas = rough.canvas(canvasRef);
+    const roughCanvas = rough.canvas(canvasRef, { options: {} });
     const canvasContext = canvasRef.getContext("2d");
 
     setCanvasData(() => ({
       roughCanvas,
       canvasContext,
-      generator: roughCanvas.generator,
     }));
   });
 
@@ -108,7 +107,9 @@ const Canvas: Component = () => {
       target: globalThis.Element;
     }
   ) {
-    setCords(() => ({ x: e.clientX, y: e.clientY }));
+    const offsetLeft = canvasData()?.canvasContext?.canvas.offsetLeft ?? 0;
+    const offsetTop = canvasData()?.canvasContext?.canvas.offsetTop ?? 0;
+    setCords(() => ({ x: e.clientX - offsetLeft, y: e.clientY - offsetTop }));
     setIsMouseDown(true);
   }
 
@@ -122,7 +123,7 @@ const Canvas: Component = () => {
     const cordsPos = cords();
     const type = selectedType();
     if (!isMouseDown() || !cordsPos || !type) return;
-    if (type === "selction") return;
+    if (type === "selection") return;
 
     const currentElementData = currentElement();
 
@@ -176,15 +177,15 @@ const Canvas: Component = () => {
     setIsMouseDown(false);
     setCords(undefined);
     setCurrentElement(undefined);
-    setSelectedType(() => "selction");
+    setSelectedType(() => "selection");
   }
 
   return (
     <canvas
       ref={canvasRef}
       classList={{
-        "cursor-crosshair": selectedType() !== "selction",
-        "cursor-default": selectedType() === "selction",
+        "cursor-crosshair": selectedType() !== "selection",
+        "cursor-default": selectedType() === "selection",
       }}
       width={window.innerWidth}
       height={window.innerHeight}
@@ -195,57 +196,49 @@ const Canvas: Component = () => {
   );
 };
 
+const headerOptions = [
+  {
+    name: "selection",
+    icon: <FiMousePointer />,
+  },
+  {
+    name: "rectangle",
+    icon: <FiSquare />,
+  },
+  {
+    name: "ellipse",
+    icon: <FiCircle />,
+  },
+  {
+    name: "line",
+    icon: <FiMinus />,
+  },
+] satisfies {
+  name: SelectedType;
+  icon: JSX.Element;
+}[];
+
 const Header: Component = () => {
   return (
     <header class="fixed top-3 left-0 w-full px-2">
-      <button class="rounded border border-stone-300 bg-white p-2.5  hover:bg-stone-100">
+      <button class="rounded border border-stone-300 bg-white p-2.5 hover:bg-stone-100 focus:bg-stone-300 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-stone-300">
         <FiMenu />
       </button>
-      <nav class="absolute top-0 left-1/2 flex max-w-3xl -translate-x-1/2 space-x-1 rounded border border-stone-200 p-1.5 shadow-md">
-        <button
-          class="rounded  p-2.5 hover:bg-stone-100 focus:bg-indigo-400"
-          classList={{
-            "bg-indigo-400": selectedType() === "selction",
-            "bg-white": selectedType() !== "selction",
-          }}
-          onclick={() => setSelectedType(() => "selction")}
-        >
-          <FiMousePointer
-            color={selectedType() === "selction" ? "white" : "black"}
-          />
-        </button>
-        <button
-          class="rounded bg-white p-2.5 hover:bg-stone-100 focus:bg-indigo-400"
-          classList={{
-            "bg-indigo-400": selectedType() === "rectangle",
-            "bg-white": selectedType() !== "rectangle",
-          }}
-          onClick={() => setSelectedType(() => "rectangle")}
-        >
-          <FiSquare
-            color={selectedType() === "rectangle" ? "white" : "black"}
-          />
-        </button>
-        <button
-          class="rounded bg-white p-2.5 hover:bg-stone-100 focus:bg-indigo-400"
-          classList={{
-            "bg-indigo-400": selectedType() === "circle",
-            "bg-white": selectedType() !== "circle",
-          }}
-          onClick={() => setSelectedType(() => "circle")}
-        >
-          <FiCircle color={selectedType() === "circle" ? "white" : "black"} />
-        </button>
-        <button
-          class="rounded bg-white p-2.5 hover:bg-stone-100 focus:bg-indigo-400"
-          classList={{
-            "bg-indigo-400": selectedType() === "line",
-            "bg-white": selectedType() !== "line",
-          }}
-          onClick={() => setSelectedType(() => "line")}
-        >
-          <FiMinus color={selectedType() === "line" ? "white" : "black"} />
-        </button>
+      <nav class="absolute top-0 left-1/2 flex max-w-3xl -translate-x-1/2 space-x-1 rounded border border-stone-200 bg-white p-1.5 shadow-md">
+        <For each={headerOptions}>
+          {({ name, icon }) => (
+            <button
+              class="rounded p-2.5 hover:bg-stone-100 focus:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-600"
+              classList={{
+                "bg-indigo-400": selectedType() === name,
+                "bg-white": selectedType() !== name,
+              }}
+              onclick={() => setSelectedType(() => name)}
+            >
+              {icon}
+            </button>
+          )}
+        </For>
       </nav>
     </header>
   );

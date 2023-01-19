@@ -16,10 +16,11 @@ interface LineElement extends BaseElement {
   y2: number;
 }
 
-interface CircleElement extends BaseElement {
-  type: "circle";
-  diameter: number;
+interface EllipseElement extends BaseElement {
+  type: "ellipse";
+  width: number;
+  height: number;
 }
 
-export type Element = RectangleElement | CircleElement | LineElement;
-export type SelectedType = Element["type"] | "selction";
+export type Element = RectangleElement | EllipseElement | LineElement;
+export type SelectedType = Element["type"] | "selection";
