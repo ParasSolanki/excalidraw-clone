@@ -1,7 +1,6 @@
 import { Component, createSignal, For, onMount } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import rough from "roughjs";
-import { nanoid } from "nanoid";
 import type { RoughCanvas } from "roughjs/bin/canvas";
 import type { Element, ElementType } from "./types";
 import {
@@ -12,102 +11,30 @@ import {
   FiMinus,
 } from "solid-icons/fi";
 import type { IconTypes } from "solid-icons";
-import createAppState from "./app-state";
+import createAppState from "./app/app-state";
+import { createNewElement } from "./app/elements";
+import { renderScene } from "./app/render";
 
 const [canvasData, setCanvasData] = createSignal<{
-  roughCanvas: RoughCanvas;
-  canvasContext: CanvasRenderingContext2D | null;
-}>();
+  roughCanvas: RoughCanvas | null;
+  ctx: CanvasRenderingContext2D | null;
+}>({ roughCanvas: null, ctx: null });
 const [elements, setElements] = createSignal<Element[]>([]);
 const { appState, updateAppState } = createAppState();
-
-interface CreateNewElementProps {
-  type: Element["type"];
-  x: number;
-  y: number;
-  clientX: number;
-  clientY: number;
-}
-
-function createNewElement({
-  type,
-  x,
-  y,
-  clientX,
-  clientY,
-}: CreateNewElementProps): Element | undefined {
-  const width = clientX - x;
-  const height = clientY - y;
-
-  if (type === "rectangle") {
-    return { id: nanoid(), type, x, y, width, height };
-  } else if (type === "ellipse") {
-    return { id: nanoid(), type, x, y, width, height };
-  } else if (type === "line") {
-    return {
-      id: nanoid(),
-      type,
-      x,
-      y,
-      width,
-      height,
-      x2: clientX,
-      y2: clientY,
-    };
-  }
-
-  return undefined;
-}
-
-function drawElements() {
-  const elementsData = elements();
-  const canvas = canvasData();
-
-  if (!elementsData || !canvas) return;
-
-  // clear previous elements
-  canvas.canvasContext?.clearRect(
-    0,
-    0,
-    canvas.canvasContext.canvas.width,
-    canvas.canvasContext.canvas.height
-  );
-
-  elementsData.forEach((el) => {
-    if (el.type === "rectangle") {
-      canvas.roughCanvas.rectangle(el.x, el.y, el.width, el.height);
-    }
-    if (el.type === "line") {
-      canvas.roughCanvas.line(el.x, el.y, el.x2, el.y2);
-    }
-    if (el.type === "ellipse") {
-      // console.log(canvas.canvasContext?.moveTo())
-      canvas.roughCanvas.ellipse(el.y, el.y, el.width, el.height);
-    }
-  });
-}
 
 const Canvas: Component = () => {
   let canvasRef: HTMLCanvasElement | undefined = undefined;
 
   onMount(() => {
     if (!canvasRef) return;
-    const roughCanvas = rough.canvas(canvasRef, { options: {} });
-    const canvasContext = canvasRef.getContext("2d");
-
-    setCanvasData(() => ({
-      roughCanvas,
-      canvasContext,
-    }));
+    setCanvasData({
+      roughCanvas: rough.canvas(canvasRef, { options: {} }),
+      ctx: canvasRef.getContext("2d"),
+    });
   });
 
-  function handleMouseDown(
-    e: MouseEvent & {
-      currentTarget: HTMLCanvasElement;
-      target: globalThis.Element;
-    }
-  ) {
-    const ctx = canvasData()?.canvasContext;
+  function handleMouseDown(e: MouseEvent) {
+    const ctx = canvasData()?.ctx;
 
     if (!ctx) return;
 
@@ -152,7 +79,11 @@ const Canvas: Component = () => {
         }
       }
 
-      drawElements();
+      renderScene({
+        elements: elements(),
+        ctx: canvasData()?.ctx,
+        roughCanvas: canvasData()?.roughCanvas,
+      });
     }
 
     function handleMouseUp() {
@@ -180,8 +111,8 @@ const Canvas: Component = () => {
       }}
       width={window.innerWidth}
       height={window.innerHeight}
-      onmousedown={handleMouseDown}
-    ></canvas>
+      onMouseDown={handleMouseDown}
+    />
   );
 };
 
