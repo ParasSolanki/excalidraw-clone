@@ -2,7 +2,7 @@ import { Component, createSignal, For, onMount } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import rough from "roughjs";
 import type { RoughCanvas } from "roughjs/bin/canvas";
-import type { Element, SelectedType } from "./types";
+import type { Element, ElementType } from "./types";
 import {
   FiMousePointer,
   FiMenu,
@@ -11,13 +11,14 @@ import {
   FiMinus,
 } from "solid-icons/fi";
 import type { IconTypes } from "solid-icons";
+import createAppState from "./app-state";
 
 const [canvasData, setCanvasData] = createSignal<{
   roughCanvas: RoughCanvas;
   canvasContext: CanvasRenderingContext2D | null;
 }>();
 const [elements, setElements] = createSignal<Element[]>();
-const [selectedType, setSelectedType] = createSignal<SelectedType>("selection");
+const { appState, updateAppState } = createAppState();
 
 interface CreateElementProps {
   type: Element["type"];
@@ -88,7 +89,6 @@ function drawElements() {
 const Canvas: Component = () => {
   const [isMouseDown, setIsMouseDown] = createSignal(false);
   const [currentElement, setCurrentElement] = createSignal<Element>();
-  const [cords, setCords] = createSignal<{ x: number; y: number }>();
   let canvasRef: HTMLCanvasElement | undefined = undefined;
 
   onMount(() => {
@@ -110,7 +110,11 @@ const Canvas: Component = () => {
   ) {
     const offsetLeft = canvasData()?.canvasContext?.canvas.offsetLeft ?? 0;
     const offsetTop = canvasData()?.canvasContext?.canvas.offsetTop ?? 0;
-    setCords(() => ({ x: e.clientX - offsetLeft, y: e.clientY - offsetTop }));
+    updateAppState({
+      cursorX: e.clientX - offsetLeft,
+      cursorY: e.clientY - offsetTop,
+    });
+
     setIsMouseDown(true);
   }
 
@@ -121,18 +125,22 @@ const Canvas: Component = () => {
     }
   ) {
     // if mouse not down then return
-    const cordsPos = cords();
-    const type = selectedType();
-    if (!isMouseDown() || !cordsPos || !type) return;
-    if (type === "selection") return;
+    const appStateData = appState();
+    if (
+      !isMouseDown() ||
+      appStateData.elementType === "selection" ||
+      appStateData.cursorX === null ||
+      appStateData.cursorY === null
+    )
+      return;
 
     const currentElementData = currentElement();
 
     if (!currentElementData) {
       const el = createElement({
-        type,
-        x: cordsPos.x,
-        y: cordsPos.y,
+        type: appStateData.elementType,
+        x: appStateData.cursorX,
+        y: appStateData.cursorY,
         id: Math.floor(Math.random() * 1000),
         clientX: e.clientX,
         clientY: e.clientY,
@@ -176,17 +184,16 @@ const Canvas: Component = () => {
     }
   ) {
     setIsMouseDown(false);
-    setCords(undefined);
     setCurrentElement(undefined);
-    setSelectedType(() => "selection");
+    updateAppState({ cursorX: null, cursorY: null, elementType: "selection" });
   }
 
   return (
     <canvas
       ref={canvasRef}
       classList={{
-        "cursor-crosshair": selectedType() !== "selection",
-        "cursor-default": selectedType() === "selection",
+        "cursor-crosshair": appState().elementType !== "selection",
+        "cursor-default": appState().elementType === "selection",
       }}
       width={window.innerWidth}
       height={window.innerHeight}
@@ -215,7 +222,7 @@ const headerOptions = [
     icon: FiMinus,
   },
 ] satisfies {
-  name: SelectedType;
+  name: ElementType;
   icon: IconTypes;
 }[];
 
@@ -231,14 +238,14 @@ const Header: Component = () => {
             <button
               class="rounded p-2.5 hover:bg-stone-100 focus:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-600"
               classList={{
-                "bg-indigo-400": selectedType() === name,
-                "bg-white": selectedType() !== name,
+                "bg-indigo-400": appState().elementType === name,
+                "bg-white": appState().elementType !== name,
               }}
-              onclick={() => setSelectedType(name)}
+              onclick={() => updateAppState({ elementType: name })}
             >
               <Dynamic
                 component={icon}
-                color={selectedType() === name ? "white" : "black"}
+                color={appState().elementType === name ? "white" : "black"}
               />
             </button>
           )}

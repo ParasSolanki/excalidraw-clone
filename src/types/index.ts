@@ -23,4 +23,4 @@ interface EllipseElement extends BaseElement {
 }
 
 export type Element = RectangleElement | EllipseElement | LineElement;
-export type SelectedType = Element["type"] | "selection";
+export type ElementType = Element["type"] | "selection";
