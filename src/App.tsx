@@ -88,7 +88,6 @@ function drawElements() {
 }
 
 const Canvas: Component = () => {
-  const [isMouseDown, setIsMouseDown] = createSignal(false);
   let canvasRef: HTMLCanvasElement | undefined = undefined;
 
   onMount(() => {
@@ -108,73 +107,68 @@ const Canvas: Component = () => {
       target: globalThis.Element;
     }
   ) {
-    const offsetLeft = canvasData()?.canvasContext?.canvas.offsetLeft ?? 0;
-    const offsetTop = canvasData()?.canvasContext?.canvas.offsetTop ?? 0;
+    const ctx = canvasData()?.canvasContext;
+
+    if (!ctx) return;
+
+    const offsetLeft = ctx.canvas.offsetLeft ?? 0;
+    const offsetTop = ctx.canvas.offsetTop ?? 0;
     updateAppState({
       cursorX: e.clientX - offsetLeft,
       cursorY: e.clientY - offsetTop,
     });
 
-    setIsMouseDown(true);
-  }
+    function handleMouseMove(e: MouseEvent) {
+      const appStateData = appState();
+      if (
+        appStateData.elementType === "selection" ||
+        appStateData.cursorX === null ||
+        appStateData.cursorY === null
+      ) {
+        return;
+      }
 
-  function handleMouseMove(
-    e: MouseEvent & {
-      currentTarget: HTMLCanvasElement;
-      target: globalThis.Element;
-    }
-  ) {
-    // if mouse not down then return
-    const appStateData = appState();
-    if (
-      !isMouseDown() ||
-      appStateData.elementType === "selection" ||
-      appStateData.cursorX === null ||
-      appStateData.cursorY === null
-    ) {
-      return;
+      if (appStateData.currentElement === null) {
+        const el = createNewElement({
+          type: appStateData.elementType,
+          x: appStateData.cursorX,
+          y: appStateData.cursorY,
+          clientX: e.clientX,
+          clientY: e.clientY,
+        });
+
+        if (el) {
+          setElements((prevElements) => [...prevElements, el]);
+          updateAppState({ currentElement: el });
+        }
+      } else {
+        const el = appStateData.currentElement;
+        el.width = e.clientX - el.x;
+        el.height = e.clientY - el.y;
+
+        if (el.type === "line") {
+          el.x2 = e.clientX;
+          el.y2 = e.clientY;
+        }
+      }
+
+      drawElements();
     }
 
-    if (appStateData.currentElement === null) {
-      const el = createNewElement({
-        type: appStateData.elementType,
-        x: appStateData.cursorX,
-        y: appStateData.cursorY,
-        clientX: e.clientX,
-        clientY: e.clientY,
+    function handleMouseUp() {
+      updateAppState({
+        cursorX: null,
+        cursorY: null,
+        elementType: "selection",
+        currentElement: null,
       });
 
-      if (el) {
-        setElements((prevElements) => [...prevElements, el]);
-        updateAppState({ currentElement: el });
-      }
-    } else {
-      const el = appStateData.currentElement;
-      el.width = e.clientX - el.x;
-      el.height = e.clientY - el.y;
-
-      if (el.type === "line") {
-        el.x2 = e.clientX;
-        el.y2 = e.clientY;
-      }
+      ctx?.canvas.removeEventListener("mousemove", handleMouseMove);
+      ctx?.canvas.removeEventListener("mouseup", handleMouseUp);
     }
 
-    drawElements();
-  }
-
-  function handleMouseUp(
-    e: MouseEvent & {
-      currentTarget: HTMLCanvasElement;
-      target: globalThis.Element;
-    }
-  ) {
-    setIsMouseDown(false);
-    updateAppState({
-      cursorX: null,
-      cursorY: null,
-      elementType: "selection",
-      currentElement: null,
-    });
+    ctx.canvas.addEventListener("mousemove", handleMouseMove);
+    ctx.canvas.addEventListener("mouseup", handleMouseUp);
   }
 
   return (
@@ -187,8 +181,6 @@ const Canvas: Component = () => {
       width={window.innerWidth}
       height={window.innerHeight}
       onmousedown={handleMouseDown}
-      onmousemove={handleMouseMove}
-      onmouseup={handleMouseUp}
     ></canvas>
   );
 };
