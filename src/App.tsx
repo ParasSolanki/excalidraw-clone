@@ -1,7 +1,7 @@
-import { Component, createSignal, For, JSX, onMount } from "solid-js";
+import { Component, createSignal, For, onMount } from "solid-js";
+import { Dynamic } from "solid-js/web";
 import rough from "roughjs";
 import type { RoughCanvas } from "roughjs/bin/canvas";
-import type { RoughGenerator } from "roughjs/bin/generator";
 import type { Element, SelectedType } from "./types";
 import {
   FiMousePointer,
@@ -10,6 +10,7 @@ import {
   FiCircle,
   FiMinus,
 } from "solid-icons/fi";
+import type { IconTypes } from "solid-icons";
 
 const [canvasData, setCanvasData] = createSignal<{
   roughCanvas: RoughCanvas;
@@ -199,23 +200,23 @@ const Canvas: Component = () => {
 const headerOptions = [
   {
     name: "selection",
-    icon: <FiMousePointer />,
+    icon: FiMousePointer,
   },
   {
     name: "rectangle",
-    icon: <FiSquare />,
+    icon: FiSquare,
   },
   {
     name: "ellipse",
-    icon: <FiCircle />,
+    icon: FiCircle,
   },
   {
     name: "line",
-    icon: <FiMinus />,
+    icon: FiMinus,
   },
 ] satisfies {
   name: SelectedType;
-  icon: JSX.Element;
+  icon: IconTypes;
 }[];
 
 const Header: Component = () => {
@@ -233,9 +234,12 @@ const Header: Component = () => {
                 "bg-indigo-400": selectedType() === name,
                 "bg-white": selectedType() !== name,
               }}
-              onclick={() => setSelectedType(() => name)}
+              onclick={() => setSelectedType(name)}
             >
-              {icon}
+              <Dynamic
+                component={icon}
+                color={selectedType() === name ? "white" : "black"}
+              />
             </button>
           )}
         </For>
