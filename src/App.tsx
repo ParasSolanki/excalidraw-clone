@@ -1,6 +1,7 @@
 import { Component, createSignal, For, onMount } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import rough from "roughjs";
+import { nanoid } from "nanoid";
 import type { RoughCanvas } from "roughjs/bin/canvas";
 import type { Element, ElementType } from "./types";
 import {
@@ -17,37 +18,42 @@ const [canvasData, setCanvasData] = createSignal<{
   roughCanvas: RoughCanvas;
   canvasContext: CanvasRenderingContext2D | null;
 }>();
-const [elements, setElements] = createSignal<Element[]>();
+const [elements, setElements] = createSignal<Element[]>([]);
 const { appState, updateAppState } = createAppState();
 
-interface CreateElementProps {
+interface CreateNewElementProps {
   type: Element["type"];
-  id: number;
   x: number;
   y: number;
   clientX: number;
   clientY: number;
 }
 
-function createElement({
+function createNewElement({
   type,
   x,
   y,
   clientX,
   clientY,
-  id,
-}: CreateElementProps): Element | undefined {
-  const diffX = clientX - x;
-  const diffY = clientY - y;
+}: CreateNewElementProps): Element | undefined {
+  const width = clientX - x;
+  const height = clientY - y;
 
   if (type === "rectangle") {
-    return { type, x, y, id, width: diffX, height: diffY };
-  }
-  if (type === "line") {
-    return { type, id, x, y, x2: clientX, y2: clientY };
-  }
-  if (type === "ellipse") {
-    return { type, x, y, id, width: diffX, height: diffY };
+    return { id: nanoid(), type, x, y, width, height };
+  } else if (type === "ellipse") {
+    return { id: nanoid(), type, x, y, width, height };
+  } else if (type === "line") {
+    return {
+      id: nanoid(),
+      type,
+      x,
+      y,
+      width,
+      height,
+      x2: clientX,
+      y2: clientY,
+    };
   }
 
   return undefined;
@@ -76,19 +82,13 @@ function drawElements() {
     }
     if (el.type === "ellipse") {
       // console.log(canvas.canvasContext?.moveTo())
-      canvas.roughCanvas.ellipse(
-        el.width / 2,
-        el.height / 2,
-        el.width,
-        el.height
-      );
+      canvas.roughCanvas.ellipse(el.y, el.y, el.width, el.height);
     }
   });
 }
 
 const Canvas: Component = () => {
   const [isMouseDown, setIsMouseDown] = createSignal(false);
-  const [currentElement, setCurrentElement] = createSignal<Element>();
   let canvasRef: HTMLCanvasElement | undefined = undefined;
 
   onMount(() => {
@@ -131,47 +131,32 @@ const Canvas: Component = () => {
       appStateData.elementType === "selection" ||
       appStateData.cursorX === null ||
       appStateData.cursorY === null
-    )
+    ) {
       return;
+    }
 
-    const currentElementData = currentElement();
-
-    if (!currentElementData) {
-      const el = createElement({
+    if (appStateData.currentElement === null) {
+      const el = createNewElement({
         type: appStateData.elementType,
         x: appStateData.cursorX,
         y: appStateData.cursorY,
-        id: Math.floor(Math.random() * 1000),
         clientX: e.clientX,
         clientY: e.clientY,
       });
 
       if (el) {
-        setCurrentElement(el);
-        setElements((prevElements) => {
-          if (!prevElements) return [el];
-          return [...prevElements, el];
-        });
+        setElements((prevElements) => [...prevElements, el]);
+        updateAppState({ currentElement: el });
       }
     } else {
-      const els = elements()?.map((el) => {
-        if (el.id === currentElement()?.id) {
-          const obj = createElement({
-            type: el.type,
-            x: el.x,
-            y: el.y,
-            id: el.id,
-            clientX: e.clientX,
-            clientY: e.clientY,
-          });
+      const el = appStateData.currentElement;
+      el.width = e.clientX - el.x;
+      el.height = e.clientY - el.y;
 
-          if (obj) return obj;
-        }
-
-        return { ...el };
-      });
-
-      if (els) setElements(els);
+      if (el.type === "line") {
+        el.x2 = e.clientX;
+        el.y2 = e.clientY;
+      }
     }
 
     drawElements();
@@ -184,8 +169,12 @@ const Canvas: Component = () => {
     }
   ) {
     setIsMouseDown(false);
-    setCurrentElement(undefined);
-    updateAppState({ cursorX: null, cursorY: null, elementType: "selection" });
+    updateAppState({
+      cursorX: null,
+      cursorY: null,
+      elementType: "selection",
+      currentElement: null,
+    });
   }
 
   return (

@@ -21,6 +21,7 @@
     "vite-plugin-solid": "^2.5.0"
   },
   "dependencies": {
+    "nanoid": "^4.0.0",
     "roughjs": "^4.5.2",
     "solid-icons": "^1.0.4",
     "solid-js": "^1.6.6"

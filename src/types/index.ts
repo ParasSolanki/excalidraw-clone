@@ -1,13 +1,13 @@
 interface BaseElement {
-  id: number;
+  id: string;
   x: number;
   y: number;
+  width: number;
+  height: number;
 }
 
 interface RectangleElement extends BaseElement {
   type: "rectangle";
-  width: number;
-  height: number;
 }
 
 interface LineElement extends BaseElement {
@@ -18,8 +18,6 @@ interface LineElement extends BaseElement {
 
 interface EllipseElement extends BaseElement {
   type: "ellipse";
-  width: number;
-  height: number;
 }
 
 export type Element = RectangleElement | EllipseElement | LineElement;

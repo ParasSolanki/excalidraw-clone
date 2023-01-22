@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js";
-import { ElementType } from "./types";
+import { ElementType, Element } from "./types";
 
 interface AppState {
   elementType: ElementType;
@@ -7,6 +7,7 @@ interface AppState {
   cursorY: number | null;
   scrollX: number | null;
   scrollY: number | null;
+  currentElement: Element | null;
 }
 
 function createAppState() {
@@ -16,6 +17,7 @@ function createAppState() {
     cursorY: 0,
     scrollX: 0,
     scrollY: 0,
+    currentElement: null,
   });
 
   function updateAppState(props: Partial<AppState>) {
