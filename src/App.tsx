@@ -98,6 +98,8 @@ const Canvas: Component = () => {
         elementType: "selection",
         currentElement: null,
       });
+      // clear selected elements
+      setElements((prev) => prev.map((el) => ({ ...el, selected: false })));
 
       ctx?.canvas.removeEventListener("mousemove", handleMouseMove);
       ctx?.canvas.removeEventListener("mouseup", handleMouseUp);

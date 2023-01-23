@@ -4,6 +4,7 @@ interface BaseElement {
   y: number;
   width: number;
   height: number;
+  selected: boolean;
 }
 
 interface RectangleElement extends BaseElement {

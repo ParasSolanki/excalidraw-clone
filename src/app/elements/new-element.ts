@@ -14,9 +14,9 @@ function newElement({ type, x, y, clientX, clientY }: NewElementProps) {
   const height = clientY - y;
 
   if (type === "rectangle") {
-    return { id: nanoid(), type, x, y, width, height };
+    return { id: nanoid(), type, x, y, width, height, selected: false };
   } else if (type === "ellipse") {
-    return { id: nanoid(), type, x, y, width, height };
+    return { id: nanoid(), type, x, y, width, height, selected: false };
   } else if (type === "line") {
     return {
       id: nanoid(),
@@ -27,6 +27,7 @@ function newElement({ type, x, y, clientX, clientY }: NewElementProps) {
       height,
       x2: clientX,
       y2: clientY,
+      selected: false,
     };
   }
 
