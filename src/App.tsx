@@ -1,4 +1,4 @@
-import { Component, createSignal, For, onMount } from "solid-js";
+import { Component, createEffect, createSignal, For, onMount } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import rough from "roughjs";
 import type { RoughCanvas } from "roughjs/bin/canvas";
@@ -28,8 +28,16 @@ const Canvas: Component = () => {
   onMount(() => {
     if (!canvasRef) return;
     setCanvasData({
-      roughCanvas: rough.canvas(canvasRef, { options: {} }),
+      roughCanvas: rough.canvas(canvasRef),
       ctx: canvasRef.getContext("2d"),
+    });
+  });
+
+  createEffect(() => {
+    renderScene({
+      elements: elements(),
+      ctx: canvasData()?.ctx,
+      roughCanvas: canvasData()?.roughCanvas,
     });
   });
 
@@ -38,11 +46,9 @@ const Canvas: Component = () => {
 
     if (!ctx) return;
 
-    const offsetLeft = ctx.canvas.offsetLeft ?? 0;
-    const offsetTop = ctx.canvas.offsetTop ?? 0;
     updateAppState({
-      cursorX: e.clientX - offsetLeft,
-      cursorY: e.clientY - offsetTop,
+      cursorX: e.clientX,
+      cursorY: e.clientY,
     });
 
     function handleMouseMove(e: MouseEvent) {
@@ -65,7 +71,7 @@ const Canvas: Component = () => {
         });
 
         if (el) {
-          setElements((prevElements) => [...prevElements, el]);
+          setElements((prev) => [...prev, el]);
           updateAppState({ currentElement: el });
         }
       } else {
@@ -77,13 +83,12 @@ const Canvas: Component = () => {
           el.x2 = e.clientX;
           el.y2 = e.clientY;
         }
-      }
 
-      renderScene({
-        elements: elements(),
-        ctx: canvasData()?.ctx,
-        roughCanvas: canvasData()?.roughCanvas,
-      });
+        if (el) {
+          setElements((prev) => [...prev, el]);
+          updateAppState({ currentElement: el });
+        }
+      }
     }
 
     function handleMouseUp() {
@@ -102,6 +107,15 @@ const Canvas: Component = () => {
     ctx.canvas.addEventListener("mouseup", handleMouseUp);
   }
 
+  function handleWheel(e: WheelEvent) {
+    e.preventDefault();
+    const { deltaX, deltaY } = e;
+    updateAppState({
+      scrollX: scrollX - deltaX,
+      scrollY: scrollY - deltaY,
+    });
+  }
+
   return (
     <canvas
       ref={canvasRef}
@@ -112,6 +126,7 @@ const Canvas: Component = () => {
       width={window.innerWidth}
       height={window.innerHeight}
       onMouseDown={handleMouseDown}
+      onWheel={handleWheel}
     />
   );
 };
@@ -148,17 +163,16 @@ const Header: Component = () => {
         <For each={headerOptions}>
           {({ name, icon }) => (
             <button
-              class="rounded p-2.5 hover:bg-stone-100 focus:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-600"
+              class="rounded p-2.5 focus:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-600"
               classList={{
-                "bg-indigo-400": appState().elementType === name,
-                "bg-white": appState().elementType !== name,
+                "bg-indigo-400 text-white hover:bg-indigo-500":
+                  appState().elementType === name,
+                "bg-white text-black hover:bg-stone-100":
+                  appState().elementType !== name,
               }}
               onclick={() => updateAppState({ elementType: name })}
             >
-              <Dynamic
-                component={icon}
-                color={appState().elementType === name ? "white" : "black"}
-              />
+              <Dynamic component={icon} color={"currentColor"} />
             </button>
           )}
         </For>
