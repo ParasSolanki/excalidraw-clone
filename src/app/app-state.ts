@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js";
-import { ElementType, Element } from "../types";
+import { ElementType, Element } from "@/types";
 
 interface AppState {
   elementType: ElementType;

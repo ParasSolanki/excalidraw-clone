@@ -1,5 +1,5 @@
 import type { RoughCanvas } from "roughjs/bin/canvas";
-import type { Element } from "../../types";
+import type { Element } from "@/types";
 
 interface RenderSceneProps {
   elements: Element[];

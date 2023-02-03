@@ -1,12 +1,12 @@
 import { Component, createEffect, createSignal, onMount, Show } from "solid-js";
 import rough from "roughjs";
 import type { RoughCanvas } from "roughjs/bin/canvas";
-import type { Element } from "./types";
+import type { Element } from "@/types";
 
-import createAppState from "./app/app-state";
-import { createNewElement } from "./app/elements";
-import { renderScene } from "./app/render";
-import Header from "./components/Header";
+import createAppState from "@/app/app-state";
+import { createNewElement } from "@/app/elements";
+import { renderScene } from "@/app/render";
+import Header from "@/components/Header";
 
 const [canvasData, setCanvasData] = createSignal<{
   roughCanvas: RoughCanvas | null;

@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import type { Element } from "../../types";
+import type { Element } from "@/types";
 
 interface NewElementProps {
   type: Element["type"];

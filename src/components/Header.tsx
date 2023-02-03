@@ -1,7 +1,8 @@
 import { Component, For } from "solid-js";
 import { Dynamic } from "solid-js/web";
+import createAppState from "@/app/app-state";
 import type { IconTypes } from "solid-icons";
-import type { ElementType } from "../types";
+import type { ElementType } from "@/types";
 import {
   FiMousePointer,
   FiMenu,
@@ -9,7 +10,6 @@ import {
   FiCircle,
   FiMinus,
 } from "solid-icons/fi";
-import createAppState from "../app/app-state";
 
 const headerOptions = [
   {
