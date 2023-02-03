@@ -1,19 +1,12 @@
-import { Component, createEffect, createSignal, For, onMount } from "solid-js";
-import { Dynamic } from "solid-js/web";
+import { Component, createEffect, createSignal, onMount, Show } from "solid-js";
 import rough from "roughjs";
 import type { RoughCanvas } from "roughjs/bin/canvas";
-import type { Element, ElementType } from "./types";
-import {
-  FiMousePointer,
-  FiMenu,
-  FiSquare,
-  FiCircle,
-  FiMinus,
-} from "solid-icons/fi";
-import type { IconTypes } from "solid-icons";
+import type { Element } from "./types";
+
 import createAppState from "./app/app-state";
 import { createNewElement } from "./app/elements";
 import { renderScene } from "./app/render";
+import Header from "./components/Header";
 
 const [canvasData, setCanvasData] = createSignal<{
   roughCanvas: RoughCanvas | null;
@@ -121,6 +114,7 @@ const Canvas: Component = () => {
   return (
     <canvas
       ref={canvasRef}
+      class="relative"
       classList={{
         "cursor-crosshair": appState().elementType !== "selection",
         "cursor-default": appState().elementType === "selection",
@@ -133,53 +127,72 @@ const Canvas: Component = () => {
   );
 };
 
-const headerOptions = [
-  {
-    name: "selection",
-    icon: FiMousePointer,
-  },
-  {
-    name: "rectangle",
-    icon: FiSquare,
-  },
-  {
-    name: "ellipse",
-    icon: FiCircle,
-  },
-  {
-    name: "line",
-    icon: FiMinus,
-  },
-] satisfies {
-  name: ElementType;
-  icon: IconTypes;
-}[];
-
-const Header: Component = () => {
+const Sidebar: Component = () => {
   return (
-    <header class="fixed top-3 left-0 w-full px-2">
-      <button class="rounded border border-stone-300 bg-white p-2.5 hover:bg-stone-100 focus:bg-stone-300 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-stone-300">
-        <FiMenu />
-      </button>
-      <nav class="absolute top-0 left-1/2 flex max-w-3xl -translate-x-1/2 space-x-1 rounded border border-stone-200 bg-white p-1.5 shadow-md">
-        <For each={headerOptions}>
-          {({ name, icon }) => (
-            <button
-              class="rounded p-2.5 focus:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-600"
-              classList={{
-                "bg-indigo-400 text-white hover:bg-indigo-500":
-                  appState().elementType === name,
-                "bg-white text-black hover:bg-stone-100":
-                  appState().elementType !== name,
-              }}
-              onclick={() => updateAppState({ elementType: name })}
-            >
-              <Dynamic component={icon} color={"currentColor"} />
-            </button>
-          )}
-        </For>
-      </nav>
-    </header>
+    <aside class="fixed top-1/2 left-0 z-50 ml-3 w-52 -translate-y-1/2 space-y-4 overflow-y-auto rounded border border-stone-200 bg-white p-4 shadow-md">
+      {/* stroke */}
+      <div class="space-y-1">
+        <label for="stroke" class="block text-xs text-slate-700">
+          Stroke
+        </label>
+        <div class="flex items-center space-x-2">
+          <div
+            class="h-8 w-12 rounded"
+            style={{ "background-color": "#000000" }}
+          ></div>
+          <div class="relative">
+            <span class="pointer-events-none absolute flex h-full w-8 items-center justify-center">
+              #
+            </span>
+            <input
+              id="stroke"
+              type="text"
+              value={"0000000"}
+              class="w-full rounded border border-slate-300 py-1.5 pl-8 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-indigo-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Background */}
+      <div class="space-y-1">
+        <label for="background" class="block text-xs text-slate-700">
+          Background
+        </label>
+        <div class="flex items-center space-x-2">
+          <div
+            class="h-8 w-12 rounded"
+            style={{ "background-color": "#000000" }}
+          ></div>
+          <div class="relative">
+            <span class="pointer-events-none absolute flex h-full w-8 items-center justify-center">
+              #
+            </span>
+            <input
+              id="background"
+              type="text"
+              value={"0000000"}
+              class="w-full rounded border border-slate-300 py-1.5 pl-8 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-indigo-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* opacity */}
+      <div class="space-y-1">
+        <label for="opacity" class="block text-xs text-slate-700">
+          Opacity
+        </label>
+        <input
+          id="opacity"
+          type="range"
+          class="w-full"
+          min="0"
+          max="1"
+          step="0.01"
+        />
+      </div>
+    </aside>
   );
 };
 
@@ -187,6 +200,9 @@ const App: Component = () => {
   return (
     <>
       <Header />
+      <Show when={appState().elementType !== "selection"}>
+        <Sidebar />
+      </Show>
       <Canvas />
     </>
   );
