@@ -19,13 +19,13 @@ export function renderScene({ elements, roughCanvas, ctx }: RenderSceneProps) {
 
   elements.forEach((el) => {
     if (el.type === "rectangle") {
-      roughCanvas.rectangle(el.x, el.y, el.width, el.height);
+      roughCanvas.rectangle(el.x, el.y, el.width, el.height, { ...el.options });
     }
     if (el.type === "line") {
-      roughCanvas.line(el.x, el.y, el.x2, el.y2);
+      roughCanvas.line(el.x, el.y, el.x2, el.y2, { ...el.options });
     }
     if (el.type === "ellipse") {
-      roughCanvas.ellipse(el.x, el.y, el.width, el.height);
+      roughCanvas.ellipse(el.x, el.y, el.width, el.height, { ...el.options });
     }
   });
 }

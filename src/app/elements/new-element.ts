@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import type { Element } from "@/types";
+import type { Element, ElementOptions } from "@/types";
 
 interface NewElementProps {
   type: Element["type"];
@@ -7,16 +7,42 @@ interface NewElementProps {
   y: number;
   clientX: number;
   clientY: number;
+  options: ElementOptions;
 }
 
-function newElement({ type, x, y, clientX, clientY }: NewElementProps) {
+function newElement({
+  type,
+  x,
+  y,
+  clientX,
+  clientY,
+  options,
+}: NewElementProps) {
   const width = clientX - x;
   const height = clientY - y;
 
   if (type === "rectangle") {
-    return { id: nanoid(), type, x, y, width, height, selected: false };
+    return {
+      id: nanoid(),
+      type,
+      x,
+      y,
+      width,
+      height,
+      selected: false,
+      options,
+    };
   } else if (type === "ellipse") {
-    return { id: nanoid(), type, x, y, width, height, selected: false };
+    return {
+      id: nanoid(),
+      type,
+      x,
+      y,
+      width,
+      height,
+      selected: false,
+      options,
+    };
   } else if (type === "line") {
     return {
       id: nanoid(),
@@ -28,6 +54,7 @@ function newElement({ type, x, y, clientX, clientY }: NewElementProps) {
       x2: clientX,
       y2: clientY,
       selected: false,
+      options,
     };
   }
 

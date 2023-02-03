@@ -1,3 +1,7 @@
+import type { Options } from "roughjs/bin/core";
+
+export type ElementOptions = Pick<Options, "stroke" | "fill">;
+
 interface BaseElement {
   id: string;
   x: number;
@@ -5,6 +9,7 @@ interface BaseElement {
   width: number;
   height: number;
   selected: boolean;
+  options?: ElementOptions;
 }
 
 interface RectangleElement extends BaseElement {

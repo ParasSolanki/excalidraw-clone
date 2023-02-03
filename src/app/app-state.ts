@@ -8,6 +8,8 @@ interface AppState {
   scrollX: number | null;
   scrollY: number | null;
   currentElement: Element | null;
+  stroke: string;
+  background: string;
 }
 
 const [appState, setAppState] = createSignal<AppState>({
@@ -17,6 +19,8 @@ const [appState, setAppState] = createSignal<AppState>({
   scrollX: 0,
   scrollY: 0,
   currentElement: null,
+  stroke: "#000000",
+  background: "#000000",
 });
 
 function updateAppState(props: Partial<AppState>) {

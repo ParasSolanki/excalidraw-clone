@@ -61,6 +61,10 @@ const Canvas: Component = () => {
           y: appStateData.cursorY,
           clientX: e.clientX,
           clientY: e.clientY,
+          options: {
+            stroke: appState().stroke,
+            fill: appState().background,
+          },
         });
 
         if (el) {
@@ -138,7 +142,7 @@ const Sidebar: Component = () => {
         <div class="flex items-center space-x-2">
           <div
             class="h-8 w-12 rounded"
-            style={{ "background-color": "#000000" }}
+            style={{ "background-color": appState().stroke }}
           ></div>
           <div class="relative">
             <span class="pointer-events-none absolute flex h-full w-8 items-center justify-center">
@@ -147,8 +151,20 @@ const Sidebar: Component = () => {
             <input
               id="stroke"
               type="text"
-              value={"0000000"}
-              class="w-full rounded border border-slate-300 py-1.5 pl-8 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-indigo-500"
+              value={appState().stroke.replace("#", "")}
+              spellcheck={false}
+              class="w-full rounded border border-slate-300 py-1.5 pr-2 pl-8 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-indigo-500"
+              onInput={({ currentTarget }) => {
+                if (!currentTarget.value) return;
+
+                const isValidHexColor = /^#([0-9A-F]{3}){1,2}$/i.test(
+                  `#${currentTarget.value}`
+                );
+
+                if (isValidHexColor) {
+                  updateAppState({ stroke: `#${currentTarget.value}` });
+                }
+              }}
             />
           </div>
         </div>
@@ -162,7 +178,7 @@ const Sidebar: Component = () => {
         <div class="flex items-center space-x-2">
           <div
             class="h-8 w-12 rounded"
-            style={{ "background-color": "#000000" }}
+            style={{ "background-color": appState().background }}
           ></div>
           <div class="relative">
             <span class="pointer-events-none absolute flex h-full w-8 items-center justify-center">
@@ -171,8 +187,20 @@ const Sidebar: Component = () => {
             <input
               id="background"
               type="text"
-              value={"0000000"}
-              class="w-full rounded border border-slate-300 py-1.5 pl-8 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-indigo-500"
+              value={appState().background.replace("#", "")}
+              spellcheck={false}
+              class="w-full rounded border border-slate-300 py-1.5 pr-2 pl-8 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-indigo-500"
+              onInput={({ currentTarget }) => {
+                if (!currentTarget.value) return;
+
+                const isValidHexColor = /^#([0-9A-F]{3}){1,2}$/i.test(
+                  `#${currentTarget.value}`
+                );
+
+                if (isValidHexColor) {
+                  updateAppState({ background: `#${currentTarget.value}` });
+                }
+              }}
             />
           </div>
         </div>
