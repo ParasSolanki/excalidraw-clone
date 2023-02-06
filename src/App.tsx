@@ -1,4 +1,11 @@
-import { Component, createEffect, createSignal, onMount, Show } from "solid-js";
+import {
+  Component,
+  createEffect,
+  createSignal,
+  For,
+  onMount,
+  Show,
+} from "solid-js";
 import rough from "roughjs";
 import type { RoughCanvas } from "roughjs/bin/canvas";
 import type { Element } from "@/types";
@@ -135,22 +142,69 @@ const Canvas: Component = () => {
 const Picker: Component<{
   name: string;
   value: string;
+  variants: Array<{ name: string; hex: string }>;
   onUpdate: (value: string) => void;
 }> = (props) => {
+  const [isOpenVariants, setIsOpenVariants] = createSignal(false);
+
+  const handleUpdateValue = (value: string) => {
+    if (!value) return;
+
+    if (value === "transparent") {
+      props.onUpdate("transparent");
+      return;
+    }
+
+    const isValidHexColor = /^#([0-9A-F]{3}){1,2}$/i.test(`#${value}`);
+
+    if (isValidHexColor) {
+      props.onUpdate(`#${value}`);
+    }
+  };
+
   return (
     <div class="space-y-1">
       <label for={props.name} class="block text-xs text-slate-700">
         {props.name}
       </label>
-      <div class="flex items-center space-x-2">
-        <div
-          class="h-8 w-12 rounded border border-slate-300"
-          style={{
-            "background-color": props.value,
-            "background-image":
-              props.value === "transparent" ? `url(${transparentImg})` : "none",
-          }}
-        ></div>
+      <div class="relative flex items-center space-x-2">
+        <div class="flex items-center justify-center">
+          <button
+            type="button"
+            class="h-8 w-8 rounded border border-slate-300"
+            style={{
+              "background-color": props.value,
+              "background-image":
+                props.value === "transparent"
+                  ? `url(${transparentImg})`
+                  : "none",
+            }}
+            onClick={() => setIsOpenVariants((open) => !open)}
+          ></button>
+
+          <Show when={isOpenVariants()}>
+            <div class="absolute top-0 -right-4 z-10 grid grid-cols-4 gap-2 rounded border border-slate-200 bg-white p-3 shadow-md">
+              <For each={props.variants}>
+                {(variant) => (
+                  <button
+                    type="button"
+                    class="h-7 w-7 rounded border border-slate-300"
+                    title={`${variant.name} (${variant.hex}) color`}
+                    style={{
+                      "background-color": `#${variant.hex}`,
+                    }}
+                    onClick={() => {
+                      handleUpdateValue(variant.hex);
+                      setIsOpenVariants(false);
+                    }}
+                  >
+                    <span class="sr-only">{variant.name} color</span>
+                  </button>
+                )}
+              </For>
+            </div>
+          </Show>
+        </div>
         <div class="relative">
           <span class="pointer-events-none absolute flex h-full w-8 items-center justify-center">
             #
@@ -162,20 +216,7 @@ const Picker: Component<{
             spellcheck={false}
             class="w-full rounded border border-slate-300 py-1.5 pr-2 pl-8 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-indigo-500"
             onInput={({ currentTarget }) => {
-              if (!currentTarget.value) return;
-
-              if (currentTarget.value === "transparent") {
-                props.onUpdate("transparent");
-                return;
-              }
-
-              const isValidHexColor = /^#([0-9A-F]{3}){1,2}$/i.test(
-                `#${currentTarget.value}`
-              );
-
-              if (isValidHexColor) {
-                props.onUpdate(`#${currentTarget.value}`);
-              }
+              handleUpdateValue(currentTarget.value);
             }}
           />
         </div>
@@ -184,6 +225,57 @@ const Picker: Component<{
   );
 };
 
+const strokeVariants = [
+  {
+    name: "Black",
+    hex: "000000",
+  },
+  {
+    name: "Gray 8",
+    hex: "343a40",
+  },
+  {
+    name: "Gray 7",
+    hex: "495057",
+  },
+  {
+    name: "Red 9",
+    hex: "c92a2a",
+  },
+  {
+    name: "Pink 9",
+    hex: "a61e4d",
+  },
+  {
+    name: "Grape 9",
+    hex: "862e9c",
+  },
+  {
+    name: "Violet 9",
+    hex: "5f3dc4",
+  },
+  {
+    name: "Indigo 9",
+    hex: "364fc7",
+  },
+  {
+    name: "Blue 9",
+    hex: "1864ab",
+  },
+  {
+    name: "Teal 9",
+    hex: "087f5b",
+  },
+  {
+    name: "Yellow 9",
+    hex: "5c940d",
+  },
+  {
+    name: "Orange 9",
+    hex: "d9480f",
+  },
+];
+
 const Sidebar: Component = () => {
   return (
     <aside class="fixed top-1/2 left-0 z-50 ml-3 w-52 -translate-y-1/2 space-y-4 overflow-y-auto rounded border border-stone-200 bg-white p-4 shadow-md">
@@ -191,6 +283,7 @@ const Sidebar: Component = () => {
       <Picker
         name="Stroke"
         value={appState().stroke}
+        variants={strokeVariants}
         onUpdate={(value) => updateAppState({ stroke: value })}
       />
 
@@ -198,6 +291,7 @@ const Sidebar: Component = () => {
       <Picker
         name="Background"
         value={appState().background}
+        variants={strokeVariants}
         onUpdate={(value) => updateAppState({ background: value })}
       />
 
