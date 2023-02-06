@@ -7,6 +7,7 @@ import createAppState from "@/app/app-state";
 import { createNewElement } from "@/app/elements";
 import { renderScene } from "@/app/render";
 import Header from "@/components/Header";
+import transparentImg from "@/assets/images/transparent.png";
 
 const [canvasData, setCanvasData] = createSignal<{
   roughCanvas: RoughCanvas | null;
@@ -131,80 +132,74 @@ const Canvas: Component = () => {
   );
 };
 
+const Picker: Component<{
+  name: string;
+  value: string;
+  onUpdate: (value: string) => void;
+}> = (props) => {
+  return (
+    <div class="space-y-1">
+      <label for={props.name} class="block text-xs text-slate-700">
+        {props.name}
+      </label>
+      <div class="flex items-center space-x-2">
+        <div
+          class="h-8 w-12 rounded border border-slate-300"
+          style={{
+            "background-color": props.value,
+            "background-image":
+              props.value === "transparent" ? `url(${transparentImg})` : "none",
+          }}
+        ></div>
+        <div class="relative">
+          <span class="pointer-events-none absolute flex h-full w-8 items-center justify-center">
+            #
+          </span>
+          <input
+            id={props.name}
+            type="text"
+            value={props.value.replace("#", "")}
+            spellcheck={false}
+            class="w-full rounded border border-slate-300 py-1.5 pr-2 pl-8 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-indigo-500"
+            onInput={({ currentTarget }) => {
+              if (!currentTarget.value) return;
+
+              if (currentTarget.value === "transparent") {
+                props.onUpdate("transparent");
+                return;
+              }
+
+              const isValidHexColor = /^#([0-9A-F]{3}){1,2}$/i.test(
+                `#${currentTarget.value}`
+              );
+
+              if (isValidHexColor) {
+                props.onUpdate(`#${currentTarget.value}`);
+              }
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Sidebar: Component = () => {
   return (
     <aside class="fixed top-1/2 left-0 z-50 ml-3 w-52 -translate-y-1/2 space-y-4 overflow-y-auto rounded border border-stone-200 bg-white p-4 shadow-md">
       {/* stroke */}
-      <div class="space-y-1">
-        <label for="stroke" class="block text-xs text-slate-700">
-          Stroke
-        </label>
-        <div class="flex items-center space-x-2">
-          <div
-            class="h-8 w-12 rounded"
-            style={{ "background-color": appState().stroke }}
-          ></div>
-          <div class="relative">
-            <span class="pointer-events-none absolute flex h-full w-8 items-center justify-center">
-              #
-            </span>
-            <input
-              id="stroke"
-              type="text"
-              value={appState().stroke.replace("#", "")}
-              spellcheck={false}
-              class="w-full rounded border border-slate-300 py-1.5 pr-2 pl-8 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-indigo-500"
-              onInput={({ currentTarget }) => {
-                if (!currentTarget.value) return;
-
-                const isValidHexColor = /^#([0-9A-F]{3}){1,2}$/i.test(
-                  `#${currentTarget.value}`
-                );
-
-                if (isValidHexColor) {
-                  updateAppState({ stroke: `#${currentTarget.value}` });
-                }
-              }}
-            />
-          </div>
-        </div>
-      </div>
+      <Picker
+        name="Stroke"
+        value={appState().stroke}
+        onUpdate={(value) => updateAppState({ stroke: value })}
+      />
 
       {/* Background */}
-      <div class="space-y-1">
-        <label for="background" class="block text-xs text-slate-700">
-          Background
-        </label>
-        <div class="flex items-center space-x-2">
-          <div
-            class="h-8 w-12 rounded"
-            style={{ "background-color": appState().background }}
-          ></div>
-          <div class="relative">
-            <span class="pointer-events-none absolute flex h-full w-8 items-center justify-center">
-              #
-            </span>
-            <input
-              id="background"
-              type="text"
-              value={appState().background.replace("#", "")}
-              spellcheck={false}
-              class="w-full rounded border border-slate-300 py-1.5 pr-2 pl-8 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-indigo-500"
-              onInput={({ currentTarget }) => {
-                if (!currentTarget.value) return;
-
-                const isValidHexColor = /^#([0-9A-F]{3}){1,2}$/i.test(
-                  `#${currentTarget.value}`
-                );
-
-                if (isValidHexColor) {
-                  updateAppState({ background: `#${currentTarget.value}` });
-                }
-              }}
-            />
-          </div>
-        </div>
-      </div>
+      <Picker
+        name="Background"
+        value={appState().background}
+        onUpdate={(value) => updateAppState({ background: value })}
+      />
 
       {/* opacity */}
       <div class="space-y-1">
