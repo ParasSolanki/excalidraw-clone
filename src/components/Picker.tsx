@@ -14,6 +14,7 @@ const Box: Component<{
 }> = (props) => {
   return (
     <button
+      ref={props.ref}
       type="button"
       class="h-7 w-7 rounded border border-slate-300"
       title={`${props.name ?? ""} (#${props.value}) color`}
@@ -38,8 +39,9 @@ const Picker: Component<{
   onUpdate: (value: string) => void;
 }> = (props) => {
   const [isOpenVariants, setIsOpenVariants] = createSignal(false);
+  let divRef: HTMLDivElement | undefined;
 
-  const handleUpdateValue = (value: string) => {
+  function handleChangeValue(value: string) {
     if (!value) return;
 
     if (value === "transparent") {
@@ -52,20 +54,21 @@ const Picker: Component<{
     if (isValidHexColor) {
       props.onUpdate(`#${value}`);
     }
-  };
+  }
 
-  function handleVarientsOpen() {
-    if (isOpenVariants()) {
+  function handleVarientsOpen(ev: PointerEvent) {
+    // target is not descendant of divRef element and is open
+    if (!divRef?.contains(ev.target) && isOpenVariants()) {
       setIsOpenVariants(false);
     }
   }
 
   onMount(() => {
-    document.addEventListener("mousedown", handleVarientsOpen);
+    document.addEventListener("pointerdown", handleVarientsOpen);
   });
 
   onCleanup(() => {
-    document.removeEventListener("mousedown", handleVarientsOpen);
+    document.removeEventListener("pointerdown", handleVarientsOpen);
   });
 
   return (
@@ -73,7 +76,7 @@ const Picker: Component<{
       <label for={props.name} class="block text-xs text-slate-700">
         {props.name}
       </label>
-      <div class="relative flex items-center space-x-2">
+      <div ref={divRef} class="relative flex items-center space-x-2">
         <div class="flex items-center justify-center">
           <Box
             value={props.value.replace("#", "")}
@@ -87,13 +90,9 @@ const Picker: Component<{
                   <Box
                     name={variant.name}
                     value={variant.value.replace("#", "")}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      e.stopImmediatePropagation();
-                      handleUpdateValue(variant.value);
+                    onClick={() => {
+                      handleChangeValue(variant.value);
                       setIsOpenVariants(false);
-                      return false;
                     }}
                   />
                 )}
@@ -112,7 +111,7 @@ const Picker: Component<{
             spellcheck={false}
             class="w-full rounded border border-slate-300 py-1.5 pr-2 pl-8 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-indigo-500"
             onInput={({ currentTarget }) => {
-              handleUpdateValue(currentTarget.value);
+              handleChangeValue(currentTarget.value);
             }}
           />
         </div>
