@@ -20,7 +20,7 @@ const [appState, setAppState] = createSignal<AppState>({
   scrollY: 0,
   currentElement: null,
   stroke: "#000000",
-  background: "#000000",
+  background: "transparent",
 });
 
 function updateAppState(props: Partial<AppState>) {
