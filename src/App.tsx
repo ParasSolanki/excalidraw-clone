@@ -10,6 +10,8 @@ import { renderScene } from "@/app/render";
 import Header from "@/components/Header";
 import Picker from "@/components/Picker";
 
+import { strokeVariants, backgroundVariants } from "@/constants/variants";
+
 const [canvasData, setCanvasData] = createSignal<{
   roughCanvas: RoughCanvas | null;
   ctx: CanvasRenderingContext2D | null;
@@ -132,64 +134,6 @@ const Canvas: Component = () => {
     />
   );
 };
-
-const strokeVariants = [
-  {
-    name: "Black",
-    value: "000000",
-  },
-  {
-    name: "Gray 8",
-    value: "343a40",
-  },
-  {
-    name: "Gray 7",
-    value: "495057",
-  },
-  {
-    name: "Red 9",
-    value: "c92a2a",
-  },
-  {
-    name: "Pink 9",
-    value: "a61e4d",
-  },
-  {
-    name: "Grape 9",
-    value: "862e9c",
-  },
-  {
-    name: "Violet 9",
-    value: "5f3dc4",
-  },
-  {
-    name: "Indigo 9",
-    value: "364fc7",
-  },
-  {
-    name: "Blue 9",
-    value: "1864ab",
-  },
-  {
-    name: "Teal 9",
-    value: "087f5b",
-  },
-  {
-    name: "Yellow 9",
-    value: "5c940d",
-  },
-  {
-    name: "Orange 9",
-    value: "d9480f",
-  },
-];
-
-const backgroundVariants = [
-  {
-    name: "Transparent",
-    value: "transparent",
-  },
-];
 
 const Sidebar: Component = () => {
   return (

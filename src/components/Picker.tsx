@@ -14,7 +14,6 @@ const Box: Component<{
 }> = (props) => {
   return (
     <button
-      ref={props.ref}
       type="button"
       class="h-7 w-7 rounded border border-slate-300"
       title={`${props.name ?? ""} (#${props.value}) color`}
@@ -84,14 +83,14 @@ const Picker: Component<{
           />
 
           <Show when={isOpenVariants()}>
-            <div class="absolute top-0 -right-4 z-10 grid grid-cols-4 gap-2 rounded border border-slate-200 bg-white p-3 shadow-md">
+            <div class="absolute top-0 -right-4 z-10 grid grid-cols-5 gap-2 rounded border border-slate-200 bg-white p-3 shadow-md">
               <For each={props.variants}>
                 {(variant) => (
                   <Box
                     name={variant.name}
                     value={variant.value.replace("#", "")}
                     onClick={() => {
-                      handleChangeValue(variant.value);
+                      handleChangeValue(variant.value.replace("#", ""));
                       setIsOpenVariants(false);
                     }}
                   />
