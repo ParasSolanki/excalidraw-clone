@@ -16,9 +16,9 @@ const Box: Component<{
     <button
       type="button"
       class="h-7 w-7 rounded border border-slate-300"
-      title={`${props.name ?? ""} (#${props.value}) color`}
+      title={`${props.name ?? ""} (${props.value}) color`}
       style={{
-        "background-color": `#${props.value}`,
+        "background-color": props.value,
         "background-image":
           props.value === "transparent" ? `url(${transparentImg})` : "none",
       }}
@@ -78,17 +78,22 @@ const Picker: Component<{
       <div ref={divRef} class="relative flex items-center space-x-2">
         <div class="flex items-center justify-center">
           <Box
-            value={props.value.replace("#", "")}
+            value={props.value}
             onClick={() => setIsOpenVariants((open) => !open)}
           />
 
           <Show when={isOpenVariants()}>
-            <div class="absolute top-0 -right-4 z-10 grid grid-cols-5 gap-2 rounded border border-slate-200 bg-white p-3 shadow-md">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Color Picker"
+              class="fixed top-0 -right-4 z-50 grid grid-cols-5 gap-2 rounded border border-slate-200 bg-white p-3 shadow-md"
+            >
               <For each={props.variants}>
                 {(variant) => (
                   <Box
                     name={variant.name}
-                    value={variant.value.replace("#", "")}
+                    value={variant.value}
                     onClick={() => {
                       handleChangeValue(variant.value.replace("#", ""));
                       setIsOpenVariants(false);
