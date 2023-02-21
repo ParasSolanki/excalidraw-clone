@@ -96,7 +96,6 @@ const Canvas: Component = () => {
       updateAppState({
         cursorX: null,
         cursorY: null,
-        elementType: "selection",
         currentElement: null,
       });
       // clear selected elements
@@ -122,7 +121,7 @@ const Canvas: Component = () => {
   return (
     <canvas
       ref={canvasRef}
-      class="relative"
+      class="relative bg-white"
       classList={{
         "cursor-crosshair": appState().elementType !== "selection",
         "cursor-default": appState().elementType === "selection",
@@ -137,7 +136,7 @@ const Canvas: Component = () => {
 
 const Sidebar: Component = () => {
   return (
-    <aside class="fixed top-1/2 left-0 z-50 ml-3 w-52 -translate-y-1/2 space-y-4 overflow-y-auto rounded border border-stone-200 bg-white p-4 shadow-md">
+    <aside class="fixed top-1/2 left-0 z-50 ml-3 w-52 -translate-y-1/2 space-y-4 rounded border border-stone-200 bg-white p-4 shadow-md">
       {/* stroke */}
       <Picker
         name="Stroke"
